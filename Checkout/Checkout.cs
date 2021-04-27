@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Checkout.Exceptions;
 
 namespace Checkout
 {
@@ -16,7 +17,14 @@ namespace Checkout
 
         public void Scan(string sku)
         {
-            _scanned.Add(sku);
+            if (Exists(sku))
+            {
+                _scanned.Add(sku);
+            }
+            else
+            {
+                throw new UnrecognisedProductException();
+            }
         }
 
         public int CalculatePrice()
@@ -35,6 +43,11 @@ namespace Checkout
             }
 
             return runningTotal;
+        }
+
+        private bool Exists(string sku)
+        {
+            return _products.Any(x => x.Sku == sku);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Checkout.Exceptions;
 using NUnit.Framework;
 
 namespace Checkout.Tests
@@ -57,6 +58,10 @@ namespace Checkout.Tests
         }
 
         [TestCase("A", 2, 100)]
+        [TestCase("C", 2, 40)]
+        [TestCase("C", 3, 60)]
+        [TestCase("D", 2, 30)]
+        [TestCase("D", 3, 45)]
         public void When_MultipleOfSameItemScanned_WithoutTriggeringDiscount_Then_TotalIsCalculatedCorrectly(
             string sku,
             int qty,
@@ -70,6 +75,17 @@ namespace Checkout.Tests
             var totalPrice = _checkout.CalculatePrice();
             
             Assert.AreEqual(expectedPrice, totalPrice);
+        }
+
+        [Test]
+        public void When_ProductIsUnrecognised_ScanThrowsAnException()
+        {
+            const string unrecognisedSku = "X";
+
+            Assert.Throws<UnrecognisedProductException>(() =>
+            {
+                _checkout.Scan(unrecognisedSku);
+            });
         }
     }
 }
