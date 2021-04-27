@@ -87,5 +87,50 @@ namespace Checkout.Tests
                 _checkout.Scan(unrecognisedSku);
             });
         }
+
+        [TestCase("a")]
+        [TestCase("b")]
+        [TestCase("c")]
+        [TestCase("d")]
+        public void When_ScanningASku_Then_TheCorrectCasingMustBeUsed(string sku)
+        {
+            Assert.Throws<UnrecognisedProductException>(() =>
+            {
+                _checkout.Scan(sku);
+            });
+        }
+
+        [TestCase(2, 1, 3, 2, 220)]
+        public void When_MixedContentsAreScanned_AndDiscountsNotTriggered_ThenTotalIsCalculatedCorrectly(
+            int qtyA,
+            int qtyB,
+            int qtyC,
+            int qtyD,
+            int expectedPrice)
+        {
+            for (var i = 0; i < qtyA; i++)
+            {
+                _checkout.Scan("A");
+            }
+
+            for (var i = 0; i < qtyB; i++)
+            {
+                _checkout.Scan("B");
+            }
+
+            for (var i = 0; i < qtyC; i++)
+            {
+                _checkout.Scan("C");
+            }
+
+            for (var i = 0; i < qtyD; i++)
+            {
+                _checkout.Scan("D");
+            }
+
+            var total = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(total, expectedPrice);
+        }
     }
 }
