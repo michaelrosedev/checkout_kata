@@ -19,5 +19,14 @@ namespace Checkout.Tests
             
             Assert.AreEqual(0, totalPrice);
         }
+
+        [TestCase("A", 50)]
+        public void When_ItemIsScanned_Then_TotalEqualsItemValue(string sku, int expectedPrice)
+        {
+            _checkout.Scan(sku);
+            var totalPrice = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedPrice, totalPrice);
+        }
     }
 }
