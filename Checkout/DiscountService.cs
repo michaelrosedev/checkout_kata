@@ -4,15 +4,27 @@ using System.Linq;
 
 namespace Checkout
 {
+    /// <summary>
+    /// A service for determining which discount(s) apply to a given collection of <see cref="Product"/> 
+    /// </summary>
     public class DiscountService : IDiscountService
     {
         private readonly List<Discount> _discounts;
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="DiscountService"/>
+        /// </summary>
+        /// <param name="discounts">The current applicable collection of discount(s)</param>
         public DiscountService(List<Discount> discounts)
         {
             _discounts = discounts;
         }
 
+        /// <summary>
+        /// Get the list of discounts that apply to the provided list of <see cref="Product"/>
+        /// </summary>
+        /// <param name="basket">The current basket contents</param>
+        /// <returns>A list of <see cref="Product"/> where a negative UnitPrice represents the calculated discount</returns>
         public List<Product> GetDiscounts(List<Product> basket)
         {
             var discounts = new List<Product>();
