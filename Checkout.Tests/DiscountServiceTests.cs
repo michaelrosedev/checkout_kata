@@ -16,12 +16,42 @@ namespace Checkout.Tests
         }
 
         [Test]
-        public void When_NoDiscountIsAvailable_Then_NoDiscountIsReturned()
+        public void When_NoItemsInBasket_Then_NoDiscountIsReturned()
         {
             var basket = new List<Product>(0);
             var discounts = _discountService.GetDiscounts(basket);
             
             Assert.AreEqual(0, discounts.Count);
+        }
+
+        [Test]
+        public void When_NoDiscountIsAvailable_Then_NoDiscountIsReturned()
+        {
+            var discountsAvailable = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "XYZ",
+                    TriggerQuantity = 6,
+                    DiscountValue = -12
+                }
+            };
+            
+            _discountService = new DiscountService(discountsAvailable);
+
+            var basket = new List<Product>
+            {
+                new()
+                {
+                    Sku = "A",
+                    UnitPrice = 50
+                }
+            };
+
+            var discounts = _discountService.GetDiscounts(basket);
+            
+            Assert.AreEqual(0, discounts.Count);
+
         }
 
         [Test]
@@ -215,6 +245,7 @@ namespace Checkout.Tests
         }
 
         [TestCase("A", 5, 3, 3, -20)]
+        [TestCase("B", 10, 2, 2, -15)]
         public void When_DiscountIsGreaterThanUnitPrice_Then_DiscountIsCappedAt100Percent(
             string sku,
             int unitPrice,
