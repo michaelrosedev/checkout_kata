@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Checkout
@@ -29,11 +30,15 @@ namespace Checkout
 
                 if (qty >= discount.TriggerQuantity)
                 {
-                    discounts.Add(new Product
+                    var discountQty = Math.Floor((double) qty / discount.TriggerQuantity);
+                    for (var i = 0; i < discountQty; i++)
                     {
-                        Sku = discount.Sku,
-                        UnitPrice = discount.DiscountValue
-                    });
+                        discounts.Add(new Product
+                        {
+                            Sku = discount.Sku,
+                            UnitPrice = discount.DiscountValue
+                        });
+                    }
                 }
             }
             

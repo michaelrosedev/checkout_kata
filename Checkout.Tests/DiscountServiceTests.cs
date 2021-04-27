@@ -120,6 +120,8 @@ namespace Checkout.Tests
         }
 
         [TestCase("A", 50, 4, -20)]
+        [TestCase("A", 50, 5, -20)]
+        [TestCase("B", 30, 3, -15)]
         public void When_ASingleProductExceedsTheDiscountThreshold_Then_TheCorrectDiscountIsReturned(
             string sku,
             int unitPrice,
@@ -134,6 +136,12 @@ namespace Checkout.Tests
                     TriggerQuantity = 3,
                     DiscountValue = -20
                 },
+                new()
+                {
+                    Sku = "B",
+                    TriggerQuantity = 2,
+                    DiscountValue = -15
+                }
             };
             
             _discountService = new DiscountService(discountsAvailable);
@@ -156,6 +164,45 @@ namespace Checkout.Tests
             var firstDiscount = discounts.FirstOrDefault();
             
             Assert.AreEqual(expectedDiscount, firstDiscount?.UnitPrice);
+        }
+
+        [TestCase("A", 50, 6, -40)]
+        public void When_ASingleDiscountAppliesMoreThanOnce_Then_MultipleDiscountsAreReturned(
+            string sku,
+            int unitPrice,
+            int qty,
+            int expectedDiscount)
+        {
+            var discountsAvailable = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "A",
+                    TriggerQuantity = 3,
+                    DiscountValue = -20
+                }
+            };
+            
+            _discountService = new DiscountService(discountsAvailable);
+
+            var basket = new List<Product>();
+
+            for (var i = 0; i < qty; i++)
+            {
+                basket.Add(new Product
+                {
+                    Sku = sku,
+                    UnitPrice = unitPrice
+                });
+            }
+
+            var discounts = _discountService.GetDiscounts(basket);
+            
+            Assert.That(discounts.Count > 1, "Expected more than one discount to be returned");
+
+            var totalDiscount = discounts.Sum(d => d.UnitPrice);
+            
+            Assert.AreEqual(expectedDiscount, totalDiscount);
         }
     }
 }
