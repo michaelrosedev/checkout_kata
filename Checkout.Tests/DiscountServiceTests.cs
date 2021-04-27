@@ -67,5 +67,95 @@ namespace Checkout.Tests
             
             Assert.AreEqual(-20, firstDiscount.UnitPrice);
         }
+
+        [Test]
+        public void When_MultipleDiscountsAreAvailable_Then_MultipleDiscountsAreReturned()
+        {
+            var discountsAvailable = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "A",
+                    TriggerQuantity = 3,
+                    DiscountValue = -20
+                },
+                new()
+                {
+                    Sku = "B",
+                    TriggerQuantity = 2,
+                    DiscountValue = -15
+                },
+            };
+            _discountService = new DiscountService(discountsAvailable);
+
+            var productA = new Product
+            {
+                Sku = "A",
+                UnitPrice = 50
+            };
+            var productB = new Product
+            {
+                Sku = "B",
+                UnitPrice = 30
+            };
+
+            var basket = new List<Product>
+            {
+                productA,
+                productA,
+                productA,
+                productB,
+                productB
+            };
+
+            var discounts = _discountService.GetDiscounts(basket);
+            
+            Assert.AreEqual(2, discounts.Count);
+
+            var firstDiscount = discounts[0];
+            Assert.AreEqual(-20, firstDiscount.UnitPrice);
+
+            var secondDiscount = discounts[1];
+            Assert.AreEqual(-15, secondDiscount.UnitPrice);
+        }
+
+        [TestCase("A", 50, 4, -20)]
+        public void When_ASingleProductExceedsTheDiscountThreshold_Then_TheCorrectDiscountIsReturned(
+            string sku,
+            int unitPrice,
+            int qty,
+            int expectedDiscount)
+        {
+            var discountsAvailable = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "A",
+                    TriggerQuantity = 3,
+                    DiscountValue = -20
+                },
+            };
+            
+            _discountService = new DiscountService(discountsAvailable);
+
+            var basket = new List<Product>();
+            
+            for (var i = 0; i < qty; i++)
+            {
+                basket.Add(new Product
+                {
+                    Sku = sku,
+                    UnitPrice = unitPrice
+                });                
+            }
+
+            var discounts = _discountService.GetDiscounts(basket);
+            
+            Assert.AreEqual(1, discounts.Count);
+
+            var firstDiscount = discounts.FirstOrDefault();
+            
+            Assert.AreEqual(expectedDiscount, firstDiscount?.UnitPrice);
+        }
     }
 }
