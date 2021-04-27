@@ -23,6 +23,7 @@ namespace Checkout
             {
                 var qty = group.Count();
                 var discount = _discounts.FirstOrDefault(d => d.Sku == group.Key);
+                var currentProduct = basket.First(b => b.Sku == group.Key);
                 if (discount == null)
                 {
                     continue;
@@ -31,18 +32,37 @@ namespace Checkout
                 if (qty >= discount.TriggerQuantity)
                 {
                     var discountQty = Math.Floor((double) qty / discount.TriggerQuantity);
+
+                    var shouldCapDiscount = ShouldCapDiscount(discount, currentProduct.UnitPrice);
+                    
                     for (var i = 0; i < discountQty; i++)
                     {
-                        discounts.Add(new Product
+                        if (shouldCapDiscount)
                         {
-                            Sku = discount.Sku,
-                            UnitPrice = discount.DiscountValue
-                        });
+                            discounts.Add(new Product
+                            {
+                                Sku = discount.Sku,
+                                UnitPrice = discount.TriggerQuantity * -currentProduct.UnitPrice
+                            });
+                        }
+                        else
+                        {
+                            discounts.Add(new Product
+                            {
+                                Sku = discount.Sku,
+                                UnitPrice = discount.DiscountValue
+                            });
+                        }
                     }
                 }
             }
             
             return discounts;
+        }
+
+        private static bool ShouldCapDiscount(Discount discount, int unitPrice)
+        {
+            return -discount.DiscountValue > unitPrice;
         }
     }
 }

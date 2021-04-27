@@ -213,5 +213,45 @@ namespace Checkout.Tests
             
             Assert.AreEqual(expectedDiscount, totalDiscount);
         }
+
+        [TestCase("A", 5, 3, 3, -20)]
+        public void When_DiscountIsGreaterThanUnitPrice_Then_DiscountIsCappedAt100Percent(
+            string sku,
+            int unitPrice,
+            int triggerThreshold,
+            int qty,
+            int defaultDiscountRate)
+        {
+            var discountsAvailable = new List<Discount>
+            {
+                new()
+                {
+                    Sku = sku,
+                    TriggerQuantity = triggerThreshold,
+                    DiscountValue = defaultDiscountRate
+                }
+            };
+            
+            _discountService = new DiscountService(discountsAvailable);
+
+            var basket = new List<Product>();
+
+            for (var i = 0; i < qty; i++)
+            {
+                basket.Add(new Product
+                {
+                    Sku = sku,
+                    UnitPrice = unitPrice
+                });
+            }
+
+            var discounts = _discountService.GetDiscounts(basket);
+            
+            Assert.AreEqual(1, discounts.Count);
+
+            var firstDiscount = discounts.FirstOrDefault();
+            
+            Assert.AreEqual(-unitPrice * qty, firstDiscount?.UnitPrice);
+        }
     }
 }
