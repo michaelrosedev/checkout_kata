@@ -7,24 +7,27 @@ namespace Checkout
     public class Checkout : ICheckout
     {
         private readonly IEnumerable<Product> _products;
-        private List<string> _scanned;
+        private readonly IDiscountService _discountService;
+        private List<Product> _scanned;
         
-        public Checkout(IEnumerable<Product> products)
+        public Checkout(
+            IEnumerable<Product> products,
+            IDiscountService discountService)
         {
             _products = products;
-            _scanned = new List<string>();
+            _discountService = discountService;
+            _scanned = new List<Product>();
         }
 
         public void Scan(string sku)
         {
-            if (Exists(sku))
-            {
-                _scanned.Add(sku);
-            }
-            else
+            var product = _products.FirstOrDefault(p => p.Sku == sku);
+            if (product == null)
             {
                 throw new UnrecognisedProductException();
             }
+            
+            _scanned.Add(product);
         }
 
         public int CalculatePrice()
@@ -34,20 +37,25 @@ namespace Checkout
                 return 0;
             }
             
+            ApplyDiscounts();
+            
             var runningTotal = 0;
 
             foreach (var scan in _scanned)
             {
-                var product = _products.FirstOrDefault(p => p.Sku == scan);
-                runningTotal += product.UnitPrice;
+                runningTotal += scan.UnitPrice;
             }
 
             return runningTotal;
         }
 
-        private bool Exists(string sku)
+        private void ApplyDiscounts()
         {
-            return _products.Any(x => x.Sku == sku);
+            var discounts = _discountService.GetDiscounts(_scanned);
+            if (discounts.Any())
+            {
+                _scanned.AddRange(discounts);
+            }
         }
     }
 }

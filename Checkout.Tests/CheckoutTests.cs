@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Checkout.Exceptions;
+using Moq;
 using NUnit.Framework;
 
 namespace Checkout.Tests
@@ -7,6 +8,7 @@ namespace Checkout.Tests
     public class CheckoutTests
     {
         private Checkout _checkout;
+        private Mock<IDiscountService> _discountServiceMock;
         
         [SetUp]
         public void Setup()
@@ -34,7 +36,10 @@ namespace Checkout.Tests
                     UnitPrice = 15
                 }
             };
-            _checkout = new Checkout(products);
+            _discountServiceMock = new Mock<IDiscountService>();
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+                .Returns(new List<Product>(0));
+            _checkout = new Checkout(products, _discountServiceMock.Object);
         }
 
         [Test]
@@ -131,6 +136,32 @@ namespace Checkout.Tests
             var total = _checkout.CalculatePrice();
             
             Assert.AreEqual(total, expectedPrice);
+        }
+
+        [TestCase("A", 3, 130)]
+        public void When_SingleItemDiscountIsTriggered_Then_TheTotalReflectsTheDiscount(
+            string sku,
+            int qty,
+            int expectedPrice)
+        {
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+                .Returns(new List<Product>
+                {
+                    new()
+                    {
+                        Sku = sku,
+                        UnitPrice = -20
+                    }
+                });
+            
+            for (var i = 0; i < qty; i++)
+            {
+                _checkout.Scan(sku);
+            }
+
+            var total = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedPrice, total);
         }
     }
 }
