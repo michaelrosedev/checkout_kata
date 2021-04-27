@@ -55,5 +55,21 @@ namespace Checkout.Tests
             
             Assert.AreEqual(expectedPrice, totalPrice);
         }
+
+        [TestCase("A", 2, 100)]
+        public void When_MultipleOfSameItemScanned_WithoutTriggeringDiscount_Then_TotalIsCalculatedCorrectly(
+            string sku,
+            int qty,
+            int expectedPrice)
+        {
+            for (var i = 0; i < qty; i++)
+            {
+                _checkout.Scan(sku);
+            }
+
+            var totalPrice = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedPrice, totalPrice);
+        }
     }
 }
