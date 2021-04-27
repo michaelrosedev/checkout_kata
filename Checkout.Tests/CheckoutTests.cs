@@ -9,11 +9,12 @@ namespace Checkout.Tests
     {
         private Checkout _checkout;
         private Mock<IDiscountService> _discountServiceMock;
+        private List<Product> _products;
         
         [SetUp]
         public void Setup()
         {
-            var products = new List<Product>
+            _products = new List<Product>
             {
                 new()
                 {
@@ -39,7 +40,7 @@ namespace Checkout.Tests
             _discountServiceMock = new Mock<IDiscountService>();
             _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
                 .Returns(new List<Product>(0));
-            _checkout = new Checkout(products, _discountServiceMock.Object);
+            _checkout = new Checkout(_products, _discountServiceMock.Object);
         }
 
         [Test]
@@ -162,6 +163,69 @@ namespace Checkout.Tests
             var total = _checkout.CalculatePrice();
             
             Assert.AreEqual(expectedPrice, total);
+        }
+
+        [Test]
+        public void When_MultipleDiscountsAreTriggered_Then_MultipleDiscountsAreIncludedInTheTotal()
+        {
+            const string firstSku = "A";
+            const int firstDiscount = -20;
+            const int firstUnitPrice = 50;
+            const int firstQty = 3;
+            const string secondSku = "B";
+            const int secondDiscount = -15;
+            const int secondUnitPrice = 30;
+            const int secondQty = 2;
+
+            var expectedDiscounts = new List<Product>
+            {
+                new()
+                {
+                    Sku = firstSku,
+                    UnitPrice = firstDiscount
+                },
+                new()
+                {
+                    Sku = secondSku,
+                    UnitPrice = secondDiscount
+                }
+            };
+            
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+                .Returns(expectedDiscounts);
+
+            var products = new List<Product>
+            {
+                new()
+                {
+                    Sku = firstSku,
+                    UnitPrice = firstUnitPrice
+                },
+                new()
+                {
+                    Sku = secondSku,
+                    UnitPrice = secondUnitPrice
+                },
+            };
+
+            var expectedPrice = (firstQty * firstUnitPrice) + (secondQty * secondUnitPrice) + firstDiscount + secondDiscount;
+            
+            _checkout = new Checkout(products, _discountServiceMock.Object);
+
+            for (var i = 0; i < firstQty; i++)
+            {
+                _checkout.Scan(firstSku);
+            }
+
+            for (var i = 0; i < secondQty; i++)
+            {
+                _checkout.Scan(secondSku);
+            }
+            
+            var total = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedPrice, total);
+
         }
     }
 }
