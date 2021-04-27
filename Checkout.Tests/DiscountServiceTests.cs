@@ -167,6 +167,9 @@ namespace Checkout.Tests
         }
 
         [TestCase("A", 50, 6, -40)]
+        [TestCase("A", 50, 9, -60)]
+        [TestCase("B", 30, 4, -30)]
+        [TestCase("B", 30, 6, -45)]
         public void When_ASingleDiscountAppliesMoreThanOnce_Then_MultipleDiscountsAreReturned(
             string sku,
             int unitPrice,
@@ -180,7 +183,13 @@ namespace Checkout.Tests
                     Sku = "A",
                     TriggerQuantity = 3,
                     DiscountValue = -20
-                }
+                },
+                new()
+                {
+                    Sku = "B",
+                    TriggerQuantity = 2,
+                    DiscountValue = -15
+                },
             };
             
             _discountService = new DiscountService(discountsAvailable);
