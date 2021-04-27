@@ -27,3 +27,15 @@ interface ICheckout
   int GetTotalPrice();
 }
 ```
+
+## Running the tests
+
+### Pre-Requisites
+
+This project requires .NET Core 5.0+. The latest version can be installed at <https://dot.net>.
+
+To run the tests, simply run the following command from the root of the repository:
+
+```sh
+dotnet test
+```
