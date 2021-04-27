@@ -21,6 +21,16 @@ namespace Checkout.Tests
                 {
                     Sku = "B",
                     UnitPrice = 30
+                },
+                new()
+                {
+                    Sku = "C",
+                    UnitPrice = 20
+                },
+                new()
+                {
+                    Sku = "D",
+                    UnitPrice = 15
                 }
             };
             _checkout = new Checkout(products);
@@ -36,6 +46,8 @@ namespace Checkout.Tests
 
         [TestCase("A", 50)]
         [TestCase("B", 30)]
+        [TestCase("C",20 )]
+        [TestCase("D", 15)]
         public void When_ItemIsScanned_Then_TotalEqualsItemValue(string sku, int expectedPrice)
         {
             _checkout.Scan(sku);
