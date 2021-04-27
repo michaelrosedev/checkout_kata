@@ -165,18 +165,17 @@ namespace Checkout.Tests
             Assert.AreEqual(expectedPrice, total);
         }
 
-        [Test]
-        public void When_MultipleDiscountsAreTriggered_Then_MultipleDiscountsAreIncludedInTheTotal()
+        [TestCase("A", -20, 50, 3, "B", -15, 30, 2)]
+        public void When_MultipleDiscountsAreTriggered_Then_MultipleDiscountsAreIncludedInTheTotal(
+            string firstSku,
+            int firstDiscount,
+            int firstUnitPrice,
+            int firstQty,
+            string secondSku,
+            int secondDiscount,
+            int secondUnitPrice,
+            int secondQty)
         {
-            const string firstSku = "A";
-            const int firstDiscount = -20;
-            const int firstUnitPrice = 50;
-            const int firstQty = 3;
-            const string secondSku = "B";
-            const int secondDiscount = -15;
-            const int secondUnitPrice = 30;
-            const int secondQty = 2;
-
             var expectedDiscounts = new List<Product>
             {
                 new()
