@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace Checkout.Tests
@@ -9,7 +10,20 @@ namespace Checkout.Tests
         [SetUp]
         public void Setup()
         {
-            _checkout = new Checkout();
+            var products = new List<Product>
+            {
+                new()
+                {
+                    Sku = "A",
+                    UnitPrice = 50
+                },
+                new()
+                {
+                    Sku = "B",
+                    UnitPrice = 30
+                }
+            };
+            _checkout = new Checkout(products);
         }
 
         [Test]
@@ -21,6 +35,7 @@ namespace Checkout.Tests
         }
 
         [TestCase("A", 50)]
+        [TestCase("B", 30)]
         public void When_ItemIsScanned_Then_TotalEqualsItemValue(string sku, int expectedPrice)
         {
             _checkout.Scan(sku);
