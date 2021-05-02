@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Checkout.Exceptions;
 using Moq;
 using NUnit.Framework;
@@ -9,7 +10,9 @@ namespace Checkout.Tests
     {
         private Checkout _checkout;
         private Mock<IDiscountService> _discountServiceMock;
+        private Mock<IProductCatalog> _productCatalogMock;
         private List<Product> _products;
+        private List<Product> _discounts;
         
         [SetUp]
         public void Setup()
@@ -37,10 +40,17 @@ namespace Checkout.Tests
                     UnitPrice = 15
                 }
             };
+            
+            _discounts = new List<Product>(0);
+            
+            _productCatalogMock = new Mock<IProductCatalog>();
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns<string>(sku => _products.FirstOrDefault(p => p.Sku == sku));
+            
             _discountServiceMock = new Mock<IDiscountService>();
             _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
-                .Returns(new List<Product>(0));
-            _checkout = new Checkout(_products, _discountServiceMock.Object);
+                .Returns(_discounts);
+            _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object);
         }
 
         [Test]
@@ -176,7 +186,7 @@ namespace Checkout.Tests
             int secondUnitPrice,
             int secondQty)
         {
-            var expectedDiscounts = new List<Product>
+            _discounts = new List<Product>
             {
                 new()
                 {
@@ -190,10 +200,7 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
-                .Returns(expectedDiscounts);
-
-            var products = new List<Product>
+            _products = new List<Product>
             {
                 new()
                 {
@@ -207,9 +214,13 @@ namespace Checkout.Tests
                 },
             };
 
-            var expectedPrice = (firstQty * firstUnitPrice) + (secondQty * secondUnitPrice) + firstDiscount + secondDiscount;
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+                .Returns(_discounts);
+
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns<string>(sku => _products.FirstOrDefault(p => p.Sku == sku));
             
-            _checkout = new Checkout(products, _discountServiceMock.Object);
+            var expectedPrice = (firstQty * firstUnitPrice) + (secondQty * secondUnitPrice) + firstDiscount + secondDiscount;
 
             for (var i = 0; i < firstQty; i++)
             {
@@ -224,7 +235,6 @@ namespace Checkout.Tests
             var total = _checkout.CalculatePrice();
             
             Assert.AreEqual(expectedPrice, total);
-
         }
     }
 }

@@ -6,20 +6,20 @@ namespace Checkout
 {
     public class Checkout : ICheckout
     {
-        private readonly IEnumerable<Product> _products;
+        private readonly IProductCatalog _productCatalog;
         private readonly IDiscountService _discountService;
         private readonly List<Product> _basket;
         
         /// <summary>
         /// Initialize a new instance of <see cref="Checkout"/>
         /// </summary>
-        /// <param name="products">The current list of available products</param>
+        /// <param name="productCatalog">The current product catalog</param>
         /// <param name="discountService">A service for processing discounts, if available</param>
         public Checkout(
-            IEnumerable<Product> products,
+            IProductCatalog productCatalog,
             IDiscountService discountService)
         {
-            _products = products;
+            _productCatalog = productCatalog;
             _discountService = discountService;
             _basket = new List<Product>();
         }
@@ -33,7 +33,7 @@ namespace Checkout
         /// </exception>
         public void Scan(string sku)
         {
-            var product = _products.FirstOrDefault(p => p.Sku == sku);
+            var product = _productCatalog.GetProduct(sku);
             if (product == null)
             {
                 throw new UnrecognisedProductException();
