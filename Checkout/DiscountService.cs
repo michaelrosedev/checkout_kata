@@ -9,15 +9,15 @@ namespace Checkout
     /// </summary>
     public class DiscountService : IDiscountService
     {
-        private readonly List<Discount> _discounts;
+        private readonly IDiscountRepository _discountRepository;
 
         /// <summary>
         /// Initialize a new instance of <see cref="DiscountService"/>
         /// </summary>
-        /// <param name="discounts">The current applicable collection of discount(s)</param>
-        public DiscountService(List<Discount> discounts)
+        /// <param name="discountRepository">Access to the current available discounts</param>
+        public DiscountService(IDiscountRepository discountRepository)
         {
-            _discounts = discounts;
+            _discountRepository = discountRepository;
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Checkout
             foreach (var group in groupedBasket)
             {
                 var qty = group.Count();
-                var discount = _discounts.FirstOrDefault(d => d.Sku == group.Key);
+                var discount = _discountRepository.GetDiscountForSku(group.Key);
                 var currentProduct = basket.First(b => b.Sku == group.Key);
                 if (discount == null)
                 {

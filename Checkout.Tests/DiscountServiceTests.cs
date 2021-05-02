@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
 
 namespace Checkout.Tests
@@ -8,11 +9,18 @@ namespace Checkout.Tests
     public class DiscountServiceTests
     {
         private DiscountService _discountService;
+        private Mock<IDiscountRepository> _discountRepositoryMock;
+        private List<Discount> _discounts;
         
         [SetUp]
         public void Setup()
         {
-            _discountService = new DiscountService(new List<Discount>(0));
+            _discounts = new List<Discount>(0);
+            _discountRepositoryMock = new Mock<IDiscountRepository>();
+            _discountRepositoryMock.Setup(dr => dr.GetDiscountForSku(It.IsAny<string>()))
+                .Returns<string>((sku) => _discounts.FirstOrDefault(d => d.Sku == sku));
+            
+            _discountService = new DiscountService(_discountRepositoryMock.Object);
         }
 
         [Test]
@@ -27,7 +35,7 @@ namespace Checkout.Tests
         [Test]
         public void When_NoDiscountIsAvailable_Then_NoDiscountIsReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -37,8 +45,6 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
             var basket = new List<Product>
             {
                 new()
@@ -57,7 +63,7 @@ namespace Checkout.Tests
         [Test]
         public void When_ASingleDiscountIsAvailable_Then_ASingleDiscountIsReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -66,7 +72,6 @@ namespace Checkout.Tests
                     DiscountValue = -20
                 }
             };
-            _discountService = new DiscountService(discountsAvailable);
 
             var basket = new List<Product>
             {
@@ -101,7 +106,7 @@ namespace Checkout.Tests
         [Test]
         public void When_MultipleDiscountsAreAvailable_Then_MultipleDiscountsAreReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -116,7 +121,6 @@ namespace Checkout.Tests
                     DiscountValue = -15
                 },
             };
-            _discountService = new DiscountService(discountsAvailable);
 
             var productA = new Product
             {
@@ -158,7 +162,7 @@ namespace Checkout.Tests
             int qty,
             int expectedDiscount)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -174,8 +178,6 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
             var basket = new List<Product>();
             
             for (var i = 0; i < qty; i++)
@@ -206,7 +208,7 @@ namespace Checkout.Tests
             int qty,
             int expectedDiscount)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -222,8 +224,6 @@ namespace Checkout.Tests
                 },
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
             var basket = new List<Product>();
 
             for (var i = 0; i < qty; i++)
@@ -253,7 +253,7 @@ namespace Checkout.Tests
             int qty,
             int defaultDiscountRate)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -263,8 +263,6 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
             var basket = new List<Product>();
 
             for (var i = 0; i < qty; i++)
