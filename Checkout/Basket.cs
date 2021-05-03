@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Checkout.Exceptions;
+using Checkout.Extensions;
 using Checkout.Interfaces;
 using Checkout.Models;
 
@@ -29,7 +29,7 @@ namespace Checkout
             }
             else
             {
-                EnsureMatchingUnitPrice(basketItem.Product, product);
+                basketItem.Product.EnsureMatchingUnitPrice(product);
                 basketItem.IncrementQty();
             }
         }
@@ -50,14 +50,6 @@ namespace Checkout
         public int TotalValue()
         {
             return _contents.Sum(basketItem => basketItem.Qty * basketItem.Product.UnitPrice);
-        }
-
-        private static void EnsureMatchingUnitPrice(IProduct firstProduct, IProduct secondProduct)
-        {
-            if (firstProduct.UnitPrice != secondProduct.UnitPrice)
-            {
-                throw new PriceMismatchException(firstProduct, secondProduct);
-            }
         }
     }
 }
