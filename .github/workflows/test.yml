@@ -14,8 +14,6 @@ on:
 jobs:
   setup-version:
     runs-on: ${{ matrix.operating-system }}
-    env:
-      config: 'Release'
     strategy:
       fail-fast: true
       matrix:
@@ -31,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration $config --no-restore
+        run: dotnet build --configuration Release --no-restore
       - name: Set build number
         id: PR_NUMBER
         if: ${{ github.event_name == 'pull_request' }}
@@ -40,19 +38,19 @@ jobs:
         run: |
           if ${{ github.event_name == 'pull_request' }}
           then
-            echo "title='Test Run for PR #${{steps.PR_NUMBER.outputs.pr}} (${{github.run_number}})'" >> $GITHUB_ENV
-            echo "file_name='TestReport.${{steps.PR_NUMBER.outputs.pr}}.${{github.run_number}}.md'" >> $GITHUB_ENV
+            echo "title=Test Run for PR #${{steps.PR_NUMBER.outputs.pr}} (${{github.run_number}})" >> $GITHUB_ENV
+            echo "file_name=TestReport.${{steps.PR_NUMBER.outputs.pr}}.${{github.run_number}}.md" >> $GITHUB_ENV
           else
-            echo "title='Test Run ${{github.run_number}}'" >> $GITHUB_ENV
-            echo "file_name='TestReport.${{github.run_number}}.md'" >> $GITHUB_ENV
+            echo "title=Test Run ${{github.run_number}}" >> $GITHUB_ENV
+            echo "file_name=TestReport.${{github.run_number}}.md" >> $GITHUB_ENV
           fi
       - name: Test
-        run: dotnet test --no-restore --no-build --configuration $config --logger:"liquid.md;LogFileName=${{github.workspace}}/${{env.file_name}};Title=${{env.title}};"
+        run: dotnet test --no-restore --no-build --configuration Release --logger:"liquid.md;LogFileName=${{github.workspace}}/${{env.file_name}};Title=${{env.title}};"
       - name: Upload Test Report
         uses: actions/upload-artifact@v2
         if: ${{always()}}
         with:
-          name: 'Test Run'
+          name: Test Run
           path: ${{github.workspace}}/${{env.file_name}}
       - name: Comment PR
         uses: machine-learning-apps/pr-comment@master
