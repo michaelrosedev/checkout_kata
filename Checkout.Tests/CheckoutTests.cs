@@ -262,5 +262,57 @@ namespace Checkout.Tests
             
             Assert.AreEqual(expectedTotal, totalPrice);
         }
+
+        [Test]
+        public void When_ProductCatalogIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    null,
+                    _discountServiceMock.Object,
+                    new Basket(),
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_DiscountServiceIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    null,
+                    new Basket(),
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_BasketIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    _discountServiceMock.Object,
+                    null,
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_CarrierBagProviderIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    _discountServiceMock.Object,
+                    new Basket(),
+                    null);
+            });
+        }
     }
 }

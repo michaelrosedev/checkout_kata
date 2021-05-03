@@ -27,10 +27,10 @@ namespace Checkout
             IBasket basket,
             ICarrierBagProvider carrierBagProvider)
         {
-            _productCatalog = productCatalog;
-            _discountService = discountService;
-            _basket = basket;
-            _carrierBagProvider = carrierBagProvider;
+            _productCatalog = productCatalog ?? throw new ArgumentNullException(nameof(productCatalog));
+            _discountService = discountService ?? throw new ArgumentNullException(nameof(discountService));
+            _basket = basket ?? throw new ArgumentNullException(nameof(basket));
+            _carrierBagProvider = carrierBagProvider ?? throw new ArgumentNullException(nameof(carrierBagProvider));
         }
 
         /// <summary>
