@@ -48,7 +48,7 @@ namespace Checkout.Tests
                 .Returns<string>(sku => _products.FirstOrDefault(p => p.Sku == sku));
             
             _discountServiceMock = new Mock<IDiscountService>();
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(_discounts);
             _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object);
         }
@@ -155,12 +155,12 @@ namespace Checkout.Tests
             int qty,
             int expectedPrice)
         {
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(new List<Product>
                 {
                     new()
                     {
-                        Sku = sku,
+                        Sku = $"{sku}_multi_buy",
                         UnitPrice = -20
                     }
                 });
@@ -190,12 +190,12 @@ namespace Checkout.Tests
             {
                 new()
                 {
-                    Sku = firstSku,
+                    Sku = $"{firstSku}_multi_buy",
                     UnitPrice = firstDiscount
                 },
                 new()
                 {
-                    Sku = secondSku,
+                    Sku = $"{secondSku}_multi_buy",
                     UnitPrice = secondDiscount
                 }
             };
@@ -214,7 +214,7 @@ namespace Checkout.Tests
                 },
             };
 
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(_discounts);
 
             _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))

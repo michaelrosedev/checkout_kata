@@ -8,7 +8,7 @@ namespace Checkout
     {
         private readonly IProductCatalog _productCatalog;
         private readonly IDiscountService _discountService;
-        private readonly List<Product> _basket;
+        private readonly Basket _basket;
         
         /// <summary>
         /// Initialize a new instance of <see cref="Checkout"/>
@@ -21,7 +21,7 @@ namespace Checkout
         {
             _productCatalog = productCatalog;
             _discountService = discountService;
-            _basket = new List<Product>();
+            _basket = new Basket();
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Checkout
                 throw new UnrecognisedProductException();
             }
             
-            _basket.Add(product);
+            _basket.AddProduct(product);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Checkout
         /// <returns><see cref="int"/></returns>
         public int CalculatePrice()
         {
-            if (_basket.Count == 0)
+            if (_basket.TotalItemQuantity() == 0)
             {
                 return 0;
             }
@@ -57,9 +57,9 @@ namespace Checkout
             
             var runningTotal = 0;
 
-            foreach (var scan in _basket)
+            foreach (var basketItem in _basket.GetContents())
             {
-                runningTotal += scan.UnitPrice;
+                runningTotal += basketItem.Qty * basketItem.Product.UnitPrice;
             }
 
             return runningTotal;
@@ -70,7 +70,10 @@ namespace Checkout
             var discounts = _discountService.GetDiscounts(_basket);
             if (discounts.Any())
             {
-                _basket.AddRange(discounts);
+                foreach (var discount in discounts)
+                {
+                    _basket.AddProduct(discount);
+                }
             }
         }
     }
