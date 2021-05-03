@@ -1,18 +1,18 @@
-﻿namespace Checkout
+﻿namespace Checkout.Interfaces
 {
     /// <summary>
-    /// Represents a product
+    /// Generic product interface
     /// </summary>
-    public class Product
+    public interface IProduct
     {
         /// <summary>
         /// The stock-keeping unit of the product
         /// </summary>
-        public string Sku { get; set; }
+        public string Sku { get; }
         
         /// <summary>
         /// The unit price of the product
         /// </summary>
-        public int UnitPrice { get; set; }
+        public int UnitPrice { get; }
     }
 }

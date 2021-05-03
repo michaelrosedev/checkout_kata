@@ -1,4 +1,6 @@
-﻿namespace Checkout
+﻿using Checkout.Models;
+
+namespace Checkout.Interfaces
 {
     /// <summary>
     /// Represents a repository of discounts

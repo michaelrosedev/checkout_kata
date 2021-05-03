@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Checkout.Models;
 
-namespace Checkout
+namespace Checkout.Interfaces
 {
     /// <summary>
     /// Represents a service for processing/determining discount(s)
@@ -11,7 +12,7 @@ namespace Checkout
         /// Retrieve a list of <see cref="Discount"/> that apply to the provided basket
         /// </summary>
         /// <param name="basket">The current <see cref="IBasket"/></param>
-        /// <returns>A <see cref="List{Product}"/></returns>
-        List<Product> GetDiscounts(IBasket basket);
+        /// <returns>A <see cref="List{IProduct}"/></returns>
+        List<IProduct> GetDiscounts(IBasket basket);
     }
 }
