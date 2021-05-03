@@ -4,6 +4,7 @@ using System.Linq;
 using Checkout.Exceptions;
 using Checkout.Interfaces;
 using Checkout.Models;
+using Checkout.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -40,7 +41,7 @@ namespace Checkout.Tests
 
             var basket = new Basket();
             
-            _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object, basket);
+            _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object, basket, new NullCarrierBagProvider());
         }
 
         [Test]
@@ -223,6 +224,43 @@ namespace Checkout.Tests
             {
                 _checkout.Scan(string.Empty);
             });
+        }
+
+        [TestCase("A", 10, 10, 10, 2, 110)]
+        [TestCase("A", 12, 5, 5, 1, 65)]
+        public void When_CarrierChargesApply_Then_ChargesAreIncludedInTheTotal(
+            string sku,
+            int unitPrice,
+            int qty,
+            int totalBagPrice,
+            int bagQty,
+            int expectedTotal)
+        {
+            var carrierBagProviderMock = new Mock<ICarrierBagProvider>();
+            carrierBagProviderMock.Setup(c => c.CalculateCarrierBags(It.IsAny<IBasket>()))
+                .Returns(new CarrierBagDetails
+                {
+                    TotalPrice = totalBagPrice,
+                    Qty = bagQty
+                });
+
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns(new Product(sku, unitPrice));
+            
+            _checkout = new Checkout(
+                _productCatalogMock.Object,
+                _discountServiceMock.Object,
+                new Basket(),
+                carrierBagProviderMock.Object);
+
+            for (var i = 0; i < qty; i++)
+            {
+                _checkout.Scan(sku);    
+            }
+            
+            var totalPrice = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedTotal, totalPrice);
         }
     }
 }

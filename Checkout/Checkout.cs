@@ -2,6 +2,7 @@
 using System.Linq;
 using Checkout.Exceptions;
 using Checkout.Interfaces;
+using Checkout.Models;
 
 namespace Checkout
 {
@@ -11,6 +12,7 @@ namespace Checkout
         private readonly IProductCatalog _productCatalog;
         private readonly IDiscountService _discountService;
         private readonly IBasket _basket;
+        private readonly ICarrierBagProvider _carrierBagProvider;
         
         /// <summary>
         /// Initialize a new instance of <see cref="Checkout"/>
@@ -18,14 +20,17 @@ namespace Checkout
         /// <param name="productCatalog">The current product catalog</param>
         /// <param name="discountService">A service for processing discounts, if available</param>
         /// <param name="basket">The basket for adding items to</param>
+        /// <param name="carrierBagProvider">A service for determining if carrier bags apply</param>
         public Checkout(
             IProductCatalog productCatalog,
             IDiscountService discountService,
-            IBasket basket)
+            IBasket basket,
+            ICarrierBagProvider carrierBagProvider)
         {
             _productCatalog = productCatalog;
             _discountService = discountService;
             _basket = basket;
+            _carrierBagProvider = carrierBagProvider;
         }
 
         /// <summary>
@@ -62,6 +67,7 @@ namespace Checkout
                 return 0;
             }
             
+            AddCarrierBags();
             ApplyDiscounts();
 
             return _basket.TotalValue();
@@ -80,6 +86,18 @@ namespace Checkout
             {
                 _basket.AddProduct(discount);
             }
+        }
+
+        private void AddCarrierBags()
+        {
+            var carrierBagDetails = _carrierBagProvider.CalculateCarrierBags(_basket);
+            if (carrierBagDetails == null || carrierBagDetails.Qty == 0)
+            {
+                return;
+            }
+
+            var product = new Product($"carriers_x_{carrierBagDetails.Qty}", carrierBagDetails.TotalPrice);
+            _basket.AddProduct(product);
         }
     }
 }
