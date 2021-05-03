@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Checkout.Interfaces;
+using Checkout.Models;
 
 namespace Checkout
 {

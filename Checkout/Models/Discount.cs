@@ -1,4 +1,4 @@
-﻿namespace Checkout
+﻿namespace Checkout.Models
 {
     /// <summary>
     /// An object representing a discount based on SKU

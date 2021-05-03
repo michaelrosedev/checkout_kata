@@ -2,6 +2,7 @@
 using System.Linq;
 using Checkout.Exceptions;
 using Checkout.Interfaces;
+using Checkout.Models;
 
 namespace Checkout
 {

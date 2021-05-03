@@ -1,4 +1,6 @@
-﻿namespace Checkout.Interfaces
+﻿using Checkout.Models;
+
+namespace Checkout.Interfaces
 {
     /// <summary>
     /// Represents a product catalog

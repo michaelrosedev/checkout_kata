@@ -1,4 +1,5 @@
 ﻿using Checkout.Exceptions;
+using Checkout.Models;
 using NUnit.Framework;
 
 namespace Checkout.Tests

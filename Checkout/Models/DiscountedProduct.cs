@@ -1,7 +1,7 @@
 ﻿using System;
 using Checkout.Interfaces;
 
-namespace Checkout
+namespace Checkout.Models
 {
     /// <summary>
     /// A special <see cref="IProduct"/> implementation for discounts
