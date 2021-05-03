@@ -18,7 +18,7 @@ namespace Checkout
         }
 
         /// <inheritdoc />
-        public void AddProduct(Product product)
+        public void AddProduct(IProduct product)
         {
             var basketItem = _contents.FirstOrDefault(c => c.Product.Sku == product.Sku);
             if (basketItem == null)
@@ -44,7 +44,7 @@ namespace Checkout
             return _contents.Sum(c => c.Qty);
         }
 
-        private static void EnsureMatchingUnitPrice(Product firstProduct, Product secondProduct)
+        private static void EnsureMatchingUnitPrice(IProduct firstProduct, IProduct secondProduct)
         {
             if (firstProduct.UnitPrice != secondProduct.UnitPrice)
             {

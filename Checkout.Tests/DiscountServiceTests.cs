@@ -50,11 +50,7 @@ namespace Checkout.Tests
             
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }, 12)
+                new(new Product("A", 50), 12)
             };
             
             _basketMock.Setup(x => x.GetContents())
@@ -81,11 +77,7 @@ namespace Checkout.Tests
 
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }, 3)
+                new(new Product("A", 50), 3)
             };
 
             _basketMock.Setup(x => x.GetContents())
@@ -121,16 +113,8 @@ namespace Checkout.Tests
                 },
             };
 
-            var productA = new Product
-            {
-                Sku = "A",
-                UnitPrice = 50
-            };
-            var productB = new Product
-            {
-                Sku = "B",
-                UnitPrice = 30
-            };
+            var productA = new Product("A", 50);
+            var productB = new Product("B", 30);
 
             var basketContents = new List<BasketItem>
             {
@@ -179,11 +163,7 @@ namespace Checkout.Tests
 
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                }, qty)
+                new(new Product(sku, unitPrice), qty)
             };
             
             _basketMock.Setup(x => x.GetContents())
@@ -226,11 +206,7 @@ namespace Checkout.Tests
             
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                }, qty)
+                new(new Product(sku, unitPrice), qty)
             };
             
             _basketMock.Setup(x => x.GetContents())
@@ -266,11 +242,7 @@ namespace Checkout.Tests
             
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                }, qty)
+                new(new Product(sku, unitPrice), qty)
             };
             
             _basketMock.Setup(x => x.GetContents())
@@ -300,11 +272,7 @@ namespace Checkout.Tests
 
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }, 3)
+                new(new Product("A", 50), 3)
             };
 
             _basketMock.Setup(x => x.GetContents())
@@ -341,11 +309,7 @@ namespace Checkout.Tests
             
             var basketContents = new List<BasketItem>
             {
-                new(new Product
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }, 2)
+                new(new Product("A", 50), 2)
             };
             
             _basketMock.Setup(x => x.GetContents())

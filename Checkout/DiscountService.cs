@@ -24,9 +24,9 @@ namespace Checkout
         /// </summary>
         /// <param name="basket">The current <see cref="IBasket"/></param>
         /// <returns>A list of <see cref="Product"/> where a negative UnitPrice represents the calculated discount</returns>
-        public List<Product> GetDiscounts(IBasket basket)
+        public List<IProduct> GetDiscounts(IBasket basket)
         {
-            var discounts = new List<Product>();
+            var discounts = new List<IProduct>();
 
             foreach (var basketItem in basket.GetContents())
             {
@@ -64,13 +64,9 @@ namespace Checkout
             return -discount.DiscountValue > unitPrice;
         }
 
-        private static Product CreateDiscountForSku(string sku, int discount)
+        private static DiscountedProduct CreateDiscountForSku(string sku, int discount)
         {
-            return new()
-            {
-                Sku = $"{sku}_discount",
-                UnitPrice = discount
-            };
+            return new (sku, discount);
         }
     }
 }

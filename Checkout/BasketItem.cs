@@ -10,9 +10,9 @@ namespace Checkout
         /// <summary>
         /// Initialize a new instance of <see cref="BasketItem"/>
         /// </summary>
-        /// <param name="product">The <see cref="Product"/> that the item corresponds to</param>
+        /// <param name="product">The <see cref="IProduct"/> that the item corresponds to</param>
         /// <param name="qty">The quantity of the item. Defaults to 1 if not provided.</param>
-        public BasketItem(Product product, int qty = 1)
+        public BasketItem(IProduct product, int qty = 1)
         {
             Product = product ?? throw new ArgumentNullException(nameof(product));
 
@@ -40,7 +40,7 @@ namespace Checkout
         /// <summary>
         /// The <see cref="Product"/>
         /// </summary>
-        public Product Product { get; }
+        public IProduct Product { get; }
         
         /// <summary>
         /// The quantity of the associated <see cref="Product"/>

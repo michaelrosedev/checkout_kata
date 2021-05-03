@@ -12,36 +12,20 @@ namespace Checkout.Tests
         private Mock<IDiscountService> _discountServiceMock;
         private Mock<IProductCatalog> _productCatalogMock;
         private List<Product> _products;
-        private List<Product> _discounts;
+        private List<IProduct> _discounts;
         
         [SetUp]
         public void Setup()
         {
             _products = new List<Product>
             {
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                },
-                new()
-                {
-                    Sku = "B",
-                    UnitPrice = 30
-                },
-                new()
-                {
-                    Sku = "C",
-                    UnitPrice = 20
-                },
-                new()
-                {
-                    Sku = "D",
-                    UnitPrice = 15
-                }
+                new ("A", 50),
+                new("B", 30),
+                new("C", 20),
+                new("D", 15),
             };
             
-            _discounts = new List<Product>(0);
+            _discounts = new List<IProduct>(0);
             
             _productCatalogMock = new Mock<IProductCatalog>();
             _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
@@ -159,13 +143,9 @@ namespace Checkout.Tests
             int expectedPrice)
         {
             _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
-                .Returns(new List<Product>
+                .Returns(new List<IProduct>
                 {
-                    new()
-                    {
-                        Sku = $"{sku}_multi_buy",
-                        UnitPrice = -20
-                    }
+                    new DiscountedProduct(sku, -20)
                 });
             
             for (var i = 0; i < qty; i++)
@@ -189,32 +169,16 @@ namespace Checkout.Tests
             int secondUnitPrice,
             int secondQty)
         {
-            _discounts = new List<Product>
+            _discounts = new List<IProduct>
             {
-                new()
-                {
-                    Sku = $"{firstSku}_multi_buy",
-                    UnitPrice = firstDiscount
-                },
-                new()
-                {
-                    Sku = $"{secondSku}_multi_buy",
-                    UnitPrice = secondDiscount
-                }
+                new DiscountedProduct(firstSku, firstDiscount),
+                new DiscountedProduct(secondSku, secondDiscount)
             };
             
             _products = new List<Product>
             {
-                new()
-                {
-                    Sku = firstSku,
-                    UnitPrice = firstUnitPrice
-                },
-                new()
-                {
-                    Sku = secondSku,
-                    UnitPrice = secondUnitPrice
-                },
+                new(firstSku, firstUnitPrice),
+                new(secondSku, secondUnitPrice)
             };
 
             _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))

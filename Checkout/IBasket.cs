@@ -3,15 +3,15 @@
 namespace Checkout
 {
     /// <summary>
-    /// Represents a collection of <see cref="Product"/> ready for checkout
+    /// Represents a collection of <see cref="IProduct"/> ready for checkout
     /// </summary>
     public interface IBasket
     {
         /// <summary>
-        /// Add a <see cref="Product"/> to the basket
+        /// Add a <see cref="IProduct"/> to the basket
         /// </summary>
         /// <param name="product"></param>
-        public void AddProduct(Product product);
+        public void AddProduct(IProduct product);
         
         /// <summary>
         /// Get the contents of the basket

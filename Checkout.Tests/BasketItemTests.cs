@@ -9,11 +9,8 @@ namespace Checkout.Tests
         [Test]
         public void When_CreatingANewBasketItem_ThenTheQuantityIsOneByDefault()
         {
-            var product = new Product
-            {
-                Sku = "Apples",
-                UnitPrice = 10
-            };
+            var product = new Product("Apples", 10);
+            
             var basketItem = new BasketItem(product);
             
             Assert.AreEqual(1, basketItem.Qty);
@@ -22,11 +19,7 @@ namespace Checkout.Tests
         [Test]
         public void When_CreatingANewBasketItem_WithQuantity_ThenTheCorrectQuantityIsRecorded()
         {
-            var product = new Product
-            {
-                Sku = "Cheese",
-                UnitPrice = 5
-            };
+            var product = new Product("Cheese", 5);
 
             const int qty = 4;
             
@@ -48,11 +41,7 @@ namespace Checkout.Tests
         [TestCase(-10)]
         public void When_CreatingANewBasketItem_AndQuantityIsProvided_Then_QuantityMustBeAPositiveNumber(int qty)
         {
-            var product = new Product
-            {
-                Sku = "Coat",
-                UnitPrice = 20
-            };
+            var product = new Product("Coat", 20);
 
             Assert.Throws<ArgumentException>(() =>
             {
@@ -68,11 +57,7 @@ namespace Checkout.Tests
             int increment,
             int expectedQty)
         {
-            var product = new Product
-            {
-                Sku = "Bananas",
-                UnitPrice = 2
-            };
+            var product = new Product("Bananas", 2);
 
             var basketItem = new BasketItem(product, startingQty);
 
@@ -84,11 +69,7 @@ namespace Checkout.Tests
         [Test]
         public void When_IncrementingTheQuantityOfABasketItem_Then_TheIncrementDefaultsTo1IfNotProvided()
         {
-            var product = new Product
-            {
-                Sku = "Fish",
-                UnitPrice = 2
-            };
+            var product = new Product("Fish", 2);
 
             var basketItem = new BasketItem(product);
             
@@ -101,11 +82,8 @@ namespace Checkout.Tests
         [TestCase(-20)]
         public void When_IncrementingTheQuantityOfABasketItem_Then_TheIncrementMustBeAPositiveNumber(int increment)
         {
-            var basketItem = new BasketItem(new Product
-            {
-                Sku = "Coffee",
-                UnitPrice = 12
-            });
+            var basketItem = new BasketItem(new Product("Coffee", 12));
+            
             Assert.Throws<ArgumentException>(() =>
             {
                 basketItem.IncrementQty(increment);
@@ -115,11 +93,7 @@ namespace Checkout.Tests
         [Test]
         public void When_AddingAnItemToTheBasket_Then_TheBasketItemProvidesTheTotalValueOfTheBasketItem()
         {
-            var basketItem = new BasketItem(new Product
-            {
-                Sku = "Tea",
-                UnitPrice = 10
-            });
+            var basketItem = new BasketItem(new Product("Tea", 10));
 
             var totalValue = basketItem.TotalValue;
             
@@ -133,11 +107,9 @@ namespace Checkout.Tests
             int qty,
             int expectedTotalValue)
         {
-            var basketItem = new BasketItem(new Product
-            {
-                Sku = "Potatoes",
-                UnitPrice = unitPrice
-            }, qty);
+            var basketItem = new BasketItem(
+                new Product("Potatoes", unitPrice),
+                qty);
             
             Assert.AreEqual(expectedTotalValue, basketItem.TotalValue);
         }

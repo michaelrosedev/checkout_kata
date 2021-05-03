@@ -25,11 +25,7 @@ namespace Checkout.Tests
         [Test]
         public void When_ItemAddedToBasket_Then_BasketContainsSingleItem()
         {
-            var product = new Product
-            {
-                Sku = "X",
-                UnitPrice = 10
-            };
+            var product = new Product("X", 10);
 
             _basket.AddProduct(product);
 
@@ -42,11 +38,8 @@ namespace Checkout.Tests
         public void When_MultipleOfSameItemAddedToBasket_Then_BasketContainsCorrectNumberOfItems()
         {
             const int targetItemCount = 10;
-            var product = new Product
-            {
-                Sku = "X",
-                UnitPrice = 10
-            };
+            var product = new Product("X", 10);
+
             for (var i = 0; i < targetItemCount; i++)
             {
                 _basket.AddProduct(product);
@@ -61,11 +54,8 @@ namespace Checkout.Tests
         public void When_MultipleOfSameItemAddedToBasket_Then_BasketContainsAllItems()
         {
             const int targetItemCount = 10;
-            var product = new Product
-            {
-                Sku = "X",
-                UnitPrice = 10
-            };
+            var product = new Product("X", 10);
+
             for (var i = 0; i < targetItemCount; i++)
             {
                 _basket.AddProduct(product);
@@ -83,16 +73,8 @@ namespace Checkout.Tests
         public void When_MultipleDifferentItemsAddedToBasket_Then_BasketContainsCorrectNumberOfItems()
         {
             const int targetItemCount = 10;
-            var productX = new Product
-            {
-                Sku = "X",
-                UnitPrice = 10
-            };
-            var productY = new Product
-            {
-                Sku = "Y",
-                UnitPrice = 10
-            };
+            var productX = new Product("X", 10);
+            var productY = new Product("Y", 10);
 
             for (var i = 0; i < targetItemCount; i++)
             {
@@ -108,17 +90,9 @@ namespace Checkout.Tests
         [Test]
         public void When_SecondProductWithSameSkuButDifferentUnitPriceAddedToBasket_Then_AnExceptionIsThrown()
         {
-            var productA = new Product
-            {
-                Sku = "A",
-                UnitPrice = 1
-            };
+            var productA = new Product("A", 1);
 
-            var productB = new Product
-            {
-                Sku = "A",
-                UnitPrice = 2
-            };
+            var productB = new Product("A", 2);
             
             Assert.AreNotEqual(productA.UnitPrice, productB.UnitPrice);
 
