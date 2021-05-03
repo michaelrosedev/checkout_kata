@@ -238,11 +238,7 @@ namespace Checkout.Tests
         {
             var carrierBagProviderMock = new Mock<ICarrierBagProvider>();
             carrierBagProviderMock.Setup(c => c.CalculateCarrierBags(It.IsAny<IBasket>()))
-                .Returns(new CarrierBagDetails
-                {
-                    TotalPrice = totalBagPrice,
-                    Qty = bagQty
-                });
+                .Returns(new CarrierBagDetails(qty, totalBagPrice));
 
             _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
                 .Returns(new Product(sku, unitPrice));

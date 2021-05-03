@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Checkout.Interfaces;
 using Checkout.Models;
@@ -320,6 +321,15 @@ namespace Checkout.Tests
             var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(0, discounts.Count);
+        }
+
+        [Test]
+        public void When_DiscountRepositoryIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new DiscountService(null);
+            });
         }
     }
 }

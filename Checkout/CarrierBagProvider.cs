@@ -24,7 +24,7 @@ namespace Checkout
         /// <param name="settings">The <see cref="CarrierProviderSettings"/> to apply</param>
         public CarrierBagProvider(CarrierProviderSettings settings)
         {
-            _settings = settings;
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
         
         /// <inheritdoc />
@@ -34,20 +34,12 @@ namespace Checkout
             
             if (totalItemQty == 0)
             {
-                return new CarrierBagDetails
-                {
-                    Qty = 0,
-                    TotalPrice = 0
-                };
+                return new CarrierBagDetails(0, 0);
             }
             
             var requiredBagCount = (int)Math.Ceiling((double)totalItemQty / _settings.MaxItemsPerBag);
-            
-            return new CarrierBagDetails
-            {
-                Qty = requiredBagCount,
-                TotalPrice = _settings.UnitPrice * requiredBagCount
-            };
+
+            return new CarrierBagDetails(requiredBagCount, _settings.UnitPrice * requiredBagCount);
         }
     }
 }

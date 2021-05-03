@@ -18,7 +18,7 @@ namespace Checkout
         /// <param name="discountRepository">Access to the current available discounts</param>
         public DiscountService(IDiscountRepository discountRepository)
         {
-            _discountRepository = discountRepository;
+            _discountRepository = discountRepository ?? throw new ArgumentNullException(nameof(discountRepository));
         }
 
         /// <summary>

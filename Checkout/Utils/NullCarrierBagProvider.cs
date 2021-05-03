@@ -10,11 +10,7 @@ namespace Checkout.Utils
     {
         public CarrierBagDetails CalculateCarrierBags(IBasket basket)
         {
-            return new()
-            {
-                Qty = 0,
-                TotalPrice = 0
-            };
+            return new (0, 0);
         }
     }
 }

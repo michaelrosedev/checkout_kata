@@ -1,4 +1,5 @@
-﻿using Checkout.Interfaces;
+﻿using System;
+using Checkout.Interfaces;
 using Checkout.Models;
 using Moq;
 using NUnit.Framework;
@@ -165,6 +166,15 @@ namespace Checkout.Tests
             var carrierBagDetails = _carrierBagProvider.CalculateCarrierBags(_basketMock.Object);
             
             Assert.AreEqual(expectedNumberOfBags, carrierBagDetails.Qty);
+        }
+
+        [Test]
+        public void When_CarrierProviderSettingsAreNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new CarrierBagProvider(null);
+            });
         }
     }
 }
