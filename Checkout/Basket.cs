@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Checkout.Exceptions;
 
 namespace Checkout
 {
@@ -26,6 +27,7 @@ namespace Checkout
             }
             else
             {
+                EnsureMatchingUnitPrice(basketItem.Product, product);
                 basketItem.IncrementQty();
             }
         }
@@ -40,6 +42,14 @@ namespace Checkout
         public int TotalItemQuantity()
         {
             return _contents.Sum(c => c.Qty);
+        }
+
+        private static void EnsureMatchingUnitPrice(Product firstProduct, Product secondProduct)
+        {
+            if (firstProduct.UnitPrice != secondProduct.UnitPrice)
+            {
+                throw new PriceMismatchException(firstProduct, secondProduct);
+            }
         }
     }
 }

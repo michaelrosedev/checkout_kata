@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Checkout.Exceptions;
+using NUnit.Framework;
 
 namespace Checkout.Tests
 {
@@ -102,6 +103,31 @@ namespace Checkout.Tests
             var itemCount = _basket.TotalItemQuantity();
             
             Assert.AreEqual(2 * targetItemCount, itemCount);
+        }
+
+        [Test]
+        public void When_SecondProductWithSameSkuButDifferentUnitPriceAddedToBasket_Then_AnExceptionIsThrown()
+        {
+            var productA = new Product
+            {
+                Sku = "A",
+                UnitPrice = 1
+            };
+
+            var productB = new Product
+            {
+                Sku = "A",
+                UnitPrice = 2
+            };
+            
+            Assert.AreNotEqual(productA.UnitPrice, productB.UnitPrice);
+
+            _basket.AddProduct(productA);
+
+            Assert.Throws<PriceMismatchException>(() =>
+            {
+                _basket.AddProduct(productB);
+            });
         }
     }
 }
