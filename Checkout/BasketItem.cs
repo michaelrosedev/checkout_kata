@@ -46,5 +46,10 @@ namespace Checkout
         /// The quantity of the associated <see cref="Product"/>
         /// </summary>
         public int Qty { get; private set; }
+
+        /// <summary>
+        /// Return the total value of the current product collection
+        /// </summary>
+        public int TotalValue => Product.UnitPrice * Qty;
     }
 }

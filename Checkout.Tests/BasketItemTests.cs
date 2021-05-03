@@ -111,5 +111,35 @@ namespace Checkout.Tests
                 basketItem.IncrementQty(increment);
             });
         }
+
+        [Test]
+        public void When_AddingAnItemToTheBasket_Then_TheBasketItemProvidesTheTotalValueOfTheBasketItem()
+        {
+            var basketItem = new BasketItem(new Product
+            {
+                Sku = "Tea",
+                UnitPrice = 10
+            });
+
+            var totalValue = basketItem.TotalValue;
+            
+            Assert.AreEqual(10, totalValue);
+        }
+
+        [TestCase(10, 10, 100)]
+        [TestCase(12, 5, 60)]
+        public void When_AddingMultipleQuantities_Then_TheBasketItemProvidesTheTotalValueOfTheBasketItem(
+            int unitPrice,
+            int qty,
+            int expectedTotalValue)
+        {
+            var basketItem = new BasketItem(new Product
+            {
+                Sku = "Potatoes",
+                UnitPrice = unitPrice
+            }, qty);
+            
+            Assert.AreEqual(expectedTotalValue, basketItem.TotalValue);
+        }
     }
 }

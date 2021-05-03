@@ -8,20 +8,22 @@ namespace Checkout
     {
         private readonly IProductCatalog _productCatalog;
         private readonly IDiscountService _discountService;
-        private readonly Basket _basket;
+        private readonly IBasket _basket;
         
         /// <summary>
         /// Initialize a new instance of <see cref="Checkout"/>
         /// </summary>
         /// <param name="productCatalog">The current product catalog</param>
         /// <param name="discountService">A service for processing discounts, if available</param>
+        /// <param name="basket">The basket for adding items to</param>
         public Checkout(
             IProductCatalog productCatalog,
-            IDiscountService discountService)
+            IDiscountService discountService,
+            IBasket basket)
         {
             _productCatalog = productCatalog;
             _discountService = discountService;
-            _basket = new Basket();
+            _basket = basket;
         }
 
         /// <summary>
@@ -54,26 +56,22 @@ namespace Checkout
             }
             
             ApplyDiscounts();
-            
-            var runningTotal = 0;
 
-            foreach (var basketItem in _basket.GetContents())
-            {
-                runningTotal += basketItem.Qty * basketItem.Product.UnitPrice;
-            }
-
-            return runningTotal;
+            return _basket.GetContents().Sum(basketItem => basketItem.TotalValue);
         }
 
         private void ApplyDiscounts()
         {
             var discounts = _discountService.GetDiscounts(_basket);
-            if (discounts.Any())
+            
+            if (!discounts.Any())
             {
-                foreach (var discount in discounts)
-                {
-                    _basket.AddProduct(discount);
-                }
+                return;
+            }
+            
+            foreach (var discount in discounts)
+            {
+                _basket.AddProduct(discount);
             }
         }
     }
