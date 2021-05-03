@@ -8,11 +8,11 @@
         /// <summary>
         /// The stock-keeping unit of the product
         /// </summary>
-        public string Sku { get; set; }
+        public string Sku { get; init; }
         
         /// <summary>
         /// The unit price of the product
         /// </summary>
-        public int UnitPrice { get; set; }
+        public int UnitPrice { get; init; }
     }
 }

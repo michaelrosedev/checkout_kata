@@ -1,0 +1,115 @@
+﻿using System;
+using NUnit.Framework;
+
+namespace Checkout.Tests
+{
+    [TestFixture]
+    public class BasketItemTests
+    {
+        [Test]
+        public void When_CreatingANewBasketItem_ThenTheQuantityIsOneByDefault()
+        {
+            var product = new Product
+            {
+                Sku = "Apples",
+                UnitPrice = 10
+            };
+            var basketItem = new BasketItem(product);
+            
+            Assert.AreEqual(1, basketItem.Qty);
+        }
+
+        [Test]
+        public void When_CreatingANewBasketItem_WithQuantity_ThenTheCorrectQuantityIsRecorded()
+        {
+            var product = new Product
+            {
+                Sku = "Cheese",
+                UnitPrice = 5
+            };
+
+            const int qty = 4;
+            
+            var basketItem = new BasketItem(product, qty);
+            
+            Assert.AreEqual(qty, basketItem.Qty);
+        }
+
+        [Test]
+        public void When_CreatingANewBasketItem_Then_ProductIsRequired()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new BasketItem(null);
+            });
+        }
+
+        [TestCase(0)]
+        [TestCase(-10)]
+        public void When_CreatingANewBasketItem_AndQuantityIsProvided_Then_QuantityMustBeAPositiveNumber(int qty)
+        {
+            var product = new Product
+            {
+                Sku = "Coat",
+                UnitPrice = 20
+            };
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ = new BasketItem(product, qty);
+            });
+        }
+
+        [TestCase(1, 1, 2)]
+        [TestCase(10, 10, 20)]
+        [TestCase(1, 20, 21)]
+        public void When_IncrementingTheQuantityOfABasketItem_Then_TheCorrectValueIsCalculated(
+            int startingQty,
+            int increment,
+            int expectedQty)
+        {
+            var product = new Product
+            {
+                Sku = "Bananas",
+                UnitPrice = 2
+            };
+
+            var basketItem = new BasketItem(product, startingQty);
+
+            basketItem.IncrementQty(increment);
+            
+            Assert.AreEqual(expectedQty, basketItem.Qty);
+        }
+
+        [Test]
+        public void When_IncrementingTheQuantityOfABasketItem_Then_TheIncrementDefaultsTo1IfNotProvided()
+        {
+            var product = new Product
+            {
+                Sku = "Fish",
+                UnitPrice = 2
+            };
+
+            var basketItem = new BasketItem(product);
+            
+            basketItem.IncrementQty();
+            
+            Assert.AreEqual(2, basketItem.Qty);
+        }
+
+        [TestCase(0)]
+        [TestCase(-20)]
+        public void When_IncrementingTheQuantityOfABasketItem_Then_TheIncrementMustBeAPositiveNumber(int increment)
+        {
+            var basketItem = new BasketItem(new Product
+            {
+                Sku = "Coffee",
+                UnitPrice = 12
+            });
+            Assert.Throws<ArgumentException>(() =>
+            {
+                basketItem.IncrementQty(increment);
+            });
+        }
+    }
+}

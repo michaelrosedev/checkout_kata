@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Checkout.Exceptions;
 
 namespace Checkout
 {
+    /// <inheritdoc />
     public class Checkout : ICheckout
     {
         private readonly IProductCatalog _productCatalog;

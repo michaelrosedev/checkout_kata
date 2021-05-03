@@ -50,6 +50,7 @@ namespace Checkout.Tests
             _discountServiceMock = new Mock<IDiscountService>();
             _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(_discounts);
+            
             _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object);
         }
 
