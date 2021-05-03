@@ -64,7 +64,7 @@ namespace Checkout
             
             ApplyDiscounts();
 
-            return _basket.GetContents().Sum(basketItem => basketItem.TotalValue);
+            return _basket.TotalValue();
         }
 
         private void ApplyDiscounts()

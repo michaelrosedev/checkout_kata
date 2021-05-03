@@ -25,5 +25,11 @@ namespace Checkout.Interfaces
         /// </summary>
         /// <returns>The total number of items in the <see cref="Basket"/></returns>
         public int TotalItemQuantity();
+
+        /// <summary>
+        /// Get the total value of the items in the basket
+        /// </summary>
+        /// <returns>The sum of the value of the items in the basket</returns>
+        public int TotalValue();
     }
 }

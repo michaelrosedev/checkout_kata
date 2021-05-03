@@ -104,5 +104,52 @@ namespace Checkout.Tests
                 _basket.AddProduct(productB);
             });
         }
+
+        [Test]
+        public void When_CalculatingBasketTotalValueForASingleItem_Then_TotalIsCalculatedCorrectly()
+        {
+            const int price = 10;
+            
+            var product = new Product("Z", price);
+            
+            _basket.AddProduct(product);
+
+            var total = _basket.TotalValue();
+            
+            Assert.AreEqual(price, total);
+        }
+
+        [TestCase(10, 10, 100)]
+        [TestCase(5, 24, 120)]
+        public void When_CalculatingBasketTotalValueForMultipleOfSameItem_Then_TotalIsCalculatedCorrectly(
+            int unitPrice,
+            int qty,
+            int expectedValue)
+        {
+            var product = new Product("some_sku", unitPrice);
+
+            for (var i = 0; i < qty; i++)
+            {
+                _basket.AddProduct(product);
+            }
+
+            var totalValue = _basket.TotalValue();
+            
+            Assert.AreEqual(expectedValue, totalValue);
+        }
+
+        [Test]
+        public void When_CalculatingBasketTotalValueIncludingDiscounts_Then_TotalValueIsCalculatedCorrectly()
+        {
+            var product = new Product("pears", 10);
+            var discount = new DiscountedProduct("disc_pears", -5);
+            
+            _basket.AddProduct(product);
+            _basket.AddProduct(discount);
+
+            var total = _basket.TotalValue();
+            
+            Assert.AreEqual(5, total);
+        }
     }
 }

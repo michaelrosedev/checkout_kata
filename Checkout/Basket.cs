@@ -46,6 +46,12 @@ namespace Checkout
             return _contents.Sum(c => c.Qty);
         }
 
+        /// <inheritdoc />
+        public int TotalValue()
+        {
+            return _contents.Sum(basketItem => basketItem.Qty * basketItem.Product.UnitPrice);
+        }
+
         private static void EnsureMatchingUnitPrice(IProduct firstProduct, IProduct secondProduct)
         {
             if (firstProduct.UnitPrice != secondProduct.UnitPrice)
