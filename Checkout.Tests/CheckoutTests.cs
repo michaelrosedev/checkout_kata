@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Checkout.Exceptions;
+using Checkout.Interfaces;
 using Moq;
 using NUnit.Framework;
 

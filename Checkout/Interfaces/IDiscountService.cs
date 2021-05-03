@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Checkout
+namespace Checkout.Interfaces
 {
     /// <summary>
     /// Represents a service for processing/determining discount(s)
