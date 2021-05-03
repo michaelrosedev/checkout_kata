@@ -142,6 +142,7 @@ namespace Checkout.Tests
         [TestCase("A", 50, 4, -20)]
         [TestCase("A", 50, 5, -20)]
         [TestCase("B", 30, 3, -15)]
+        [TestCase("X", 24, 7, -18)]
         public void When_ASingleProductExceedsTheDiscountThreshold_Then_TheCorrectDiscountIsReturned(
             string sku,
             int unitPrice,
@@ -161,6 +162,12 @@ namespace Checkout.Tests
                     Sku = "B",
                     TriggerQuantity = 2,
                     DiscountValue = -15
+                },
+                new()
+                {
+                    Sku = "X",
+                    TriggerQuantity = 7,
+                    DiscountValue = -18
                 }
             };
 
