@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Checkout.Exceptions;
 using Checkout.Interfaces;
 
@@ -36,6 +37,11 @@ namespace Checkout
         /// </exception>
         public void Scan(string sku)
         {
+            if (string.IsNullOrWhiteSpace(sku))
+            {
+                throw new ArgumentNullException(nameof(sku));
+            }
+            
             var product = _productCatalog.GetProduct(sku);
             if (product == null)
             {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Checkout.Exceptions;
@@ -204,6 +205,24 @@ namespace Checkout.Tests
             var total = _checkout.CalculatePrice();
             
             Assert.AreEqual(expectedPrice, total);
+        }
+
+        [Test]
+        public void When_ScanningSku_And_SkuIsNull_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _checkout.Scan(null);
+            });
+        }
+
+        [Test]
+        public void When_ScanningSku_And_SkuIsEmpty_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _checkout.Scan(string.Empty);
+            });
         }
     }
 }
