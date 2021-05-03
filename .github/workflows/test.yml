@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+        operating-system: [ubuntu-latest, windows-latest]
         dotnet-version: ['5.0']
     steps:
       - name: Checkout
@@ -36,7 +36,7 @@ jobs:
         uses: kkak10/pr-number-action@v1.3
       - name: Set test title
         run: |
-          if ${{ github.event_name == 'pull_request' }}
+          if (${{ github.event_name == 'pull_request' }})
           then
             echo "title=Test Run for PR #${{steps.PR_NUMBER.outputs.pr}} (${{github.run_number}})" >> $GITHUB_ENV
             echo "file_name=TestReport.${{steps.PR_NUMBER.outputs.pr}}.${{github.run_number}}.md" >> $GITHUB_ENV
