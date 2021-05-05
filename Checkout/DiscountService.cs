@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Checkout.Interfaces;
+using Checkout.Models;
 
 namespace Checkout
 {
@@ -9,63 +10,51 @@ namespace Checkout
     /// </summary>
     public class DiscountService : IDiscountService
     {
-        private readonly List<Discount> _discounts;
+        private readonly IDiscountRepository _discountRepository;
 
         /// <summary>
         /// Initialize a new instance of <see cref="DiscountService"/>
         /// </summary>
-        /// <param name="discounts">The current applicable collection of discount(s)</param>
-        public DiscountService(List<Discount> discounts)
+        /// <param name="discountRepository">Access to the current available discounts</param>
+        public DiscountService(IDiscountRepository discountRepository)
         {
-            _discounts = discounts;
+            _discountRepository = discountRepository ?? throw new ArgumentNullException(nameof(discountRepository));
         }
 
         /// <summary>
         /// Get the list of discounts that apply to the provided list of <see cref="Product"/>
         /// </summary>
-        /// <param name="basket">The current basket contents</param>
+        /// <param name="basket">The current <see cref="IBasket"/></param>
         /// <returns>A list of <see cref="Product"/> where a negative UnitPrice represents the calculated discount</returns>
-        public List<Product> GetDiscounts(List<Product> basket)
+        public List<IProduct> GetDiscounts(IBasket basket)
         {
-            var discounts = new List<Product>();
+            var discounts = new List<IProduct>();
 
-            var groupedBasket = basket.GroupBy(b => b.Sku);
-
-            foreach (var group in groupedBasket)
+            foreach (var basketItem in basket.GetContents())
             {
-                var qty = group.Count();
-                var discount = _discounts.FirstOrDefault(d => d.Sku == group.Key);
-                var currentProduct = basket.First(b => b.Sku == group.Key);
+                var discount = _discountRepository.GetDiscountForSku(basketItem.Product.Sku);
                 if (discount == null)
                 {
                     continue;
                 }
+                
+                var currentProduct = basketItem.Product;
 
-                if (qty >= discount.TriggerQuantity)
+                if (basketItem.Qty < discount.TriggerQuantity)
                 {
-                    var discountQty = Math.Floor((double) qty / discount.TriggerQuantity);
+                    continue;
+                }
+                
+                var discountQty = Math.Floor((double) basketItem.Qty / discount.TriggerQuantity);
+                var shouldCapDiscount = ShouldCapDiscount(discount, currentProduct.UnitPrice);
 
-                    var shouldCapDiscount = ShouldCapDiscount(discount, currentProduct.UnitPrice);
-                    
-                    for (var i = 0; i < discountQty; i++)
-                    {
-                        if (shouldCapDiscount)
-                        {
-                            discounts.Add(new Product
-                            {
-                                Sku = discount.Sku,
-                                UnitPrice = discount.TriggerQuantity * -currentProduct.UnitPrice
-                            });
-                        }
-                        else
-                        {
-                            discounts.Add(new Product
-                            {
-                                Sku = discount.Sku,
-                                UnitPrice = discount.DiscountValue
-                            });
-                        }
-                    }
+                for (var i = 0; i < discountQty; i++)
+                {
+                    discounts.Add(
+                        shouldCapDiscount
+                            ? CreateDiscountForSku(discount.Sku, discount.TriggerQuantity * -currentProduct.UnitPrice)
+                            : CreateDiscountForSku(discount.Sku, discount.DiscountValue)
+                    );
                 }
             }
             
@@ -75,6 +64,11 @@ namespace Checkout
         private static bool ShouldCapDiscount(Discount discount, int unitPrice)
         {
             return -discount.DiscountValue > unitPrice;
+        }
+
+        private static DiscountedProduct CreateDiscountForSku(string sku, int discount)
+        {
+            return new (sku, discount);
         }
     }
 }

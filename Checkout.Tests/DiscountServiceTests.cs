@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Checkout.Interfaces;
+using Checkout.Models;
+using Moq;
 using NUnit.Framework;
 
 namespace Checkout.Tests
@@ -8,17 +12,27 @@ namespace Checkout.Tests
     public class DiscountServiceTests
     {
         private DiscountService _discountService;
+        private Mock<IDiscountRepository> _discountRepositoryMock;
+        private List<Discount> _discounts;
+        private Mock<IBasket> _basketMock;
         
         [SetUp]
         public void Setup()
         {
-            _discountService = new DiscountService(new List<Discount>(0));
+            _discounts = new List<Discount>(0);
+            _discountRepositoryMock = new Mock<IDiscountRepository>();
+            _discountRepositoryMock.Setup(dr => dr.GetDiscountForSku(It.IsAny<string>()))
+                .Returns<string>((sku) => _discounts.FirstOrDefault(d => d.Sku == sku));
+            
+            _discountService = new DiscountService(_discountRepositoryMock.Object);
+
+            _basketMock = new Mock<IBasket>();
         }
 
         [Test]
         public void When_NoItemsInBasket_Then_NoDiscountIsReturned()
         {
-            var basket = new List<Product>(0);
+            var basket = new Basket();
             var discounts = _discountService.GetDiscounts(basket);
             
             Assert.AreEqual(0, discounts.Count);
@@ -27,7 +41,7 @@ namespace Checkout.Tests
         [Test]
         public void When_NoDiscountIsAvailable_Then_NoDiscountIsReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -37,18 +51,15 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
-            var basket = new List<Product>
+            var basketContents = new List<BasketItem>
             {
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }
+                new(new Product("A", 50), 12)
             };
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
 
-            var discounts = _discountService.GetDiscounts(basket);
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(0, discounts.Count);
 
@@ -57,7 +68,7 @@ namespace Checkout.Tests
         [Test]
         public void When_ASingleDiscountIsAvailable_Then_ASingleDiscountIsReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -66,28 +77,16 @@ namespace Checkout.Tests
                     DiscountValue = -20
                 }
             };
-            _discountService = new DiscountService(discountsAvailable);
 
-            var basket = new List<Product>
+            var basketContents = new List<BasketItem>
             {
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                },
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                },
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                }
+                new(new Product("A", 50), 3)
             };
 
-            var discounts = _discountService.GetDiscounts(basket);
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(1, discounts.Count);
 
@@ -101,7 +100,7 @@ namespace Checkout.Tests
         [Test]
         public void When_MultipleDiscountsAreAvailable_Then_MultipleDiscountsAreReturned()
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -116,29 +115,20 @@ namespace Checkout.Tests
                     DiscountValue = -15
                 },
             };
-            _discountService = new DiscountService(discountsAvailable);
 
-            var productA = new Product
-            {
-                Sku = "A",
-                UnitPrice = 50
-            };
-            var productB = new Product
-            {
-                Sku = "B",
-                UnitPrice = 30
-            };
+            var productA = new Product("A", 50);
+            var productB = new Product("B", 30);
 
-            var basket = new List<Product>
+            var basketContents = new List<BasketItem>
             {
-                productA,
-                productA,
-                productA,
-                productB,
-                productB
+                new(productA, 3),
+                new(productB, 2)
             };
-
-            var discounts = _discountService.GetDiscounts(basket);
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(2, discounts.Count);
 
@@ -152,13 +142,14 @@ namespace Checkout.Tests
         [TestCase("A", 50, 4, -20)]
         [TestCase("A", 50, 5, -20)]
         [TestCase("B", 30, 3, -15)]
+        [TestCase("X", 24, 7, -18)]
         public void When_ASingleProductExceedsTheDiscountThreshold_Then_TheCorrectDiscountIsReturned(
             string sku,
             int unitPrice,
             int qty,
             int expectedDiscount)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -171,23 +162,24 @@ namespace Checkout.Tests
                     Sku = "B",
                     TriggerQuantity = 2,
                     DiscountValue = -15
+                },
+                new()
+                {
+                    Sku = "X",
+                    TriggerQuantity = 7,
+                    DiscountValue = -18
                 }
             };
-            
-            _discountService = new DiscountService(discountsAvailable);
 
-            var basket = new List<Product>();
-            
-            for (var i = 0; i < qty; i++)
+            var basketContents = new List<BasketItem>
             {
-                basket.Add(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                });                
-            }
-
-            var discounts = _discountService.GetDiscounts(basket);
+                new(new Product(sku, unitPrice), qty)
+            };
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(1, discounts.Count);
 
@@ -206,7 +198,7 @@ namespace Checkout.Tests
             int qty,
             int expectedDiscount)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -222,20 +214,15 @@ namespace Checkout.Tests
                 },
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
-            var basket = new List<Product>();
-
-            for (var i = 0; i < qty; i++)
+            var basketContents = new List<BasketItem>
             {
-                basket.Add(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                });
-            }
-
-            var discounts = _discountService.GetDiscounts(basket);
+                new(new Product(sku, unitPrice), qty)
+            };
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.That(discounts.Count > 1, "Expected more than one discount to be returned");
 
@@ -253,7 +240,7 @@ namespace Checkout.Tests
             int qty,
             int defaultDiscountRate)
         {
-            var discountsAvailable = new List<Discount>
+            _discounts = new List<Discount>
             {
                 new()
                 {
@@ -263,26 +250,93 @@ namespace Checkout.Tests
                 }
             };
             
-            _discountService = new DiscountService(discountsAvailable);
-
-            var basket = new List<Product>();
-
-            for (var i = 0; i < qty; i++)
+            var basketContents = new List<BasketItem>
             {
-                basket.Add(new Product
-                {
-                    Sku = sku,
-                    UnitPrice = unitPrice
-                });
-            }
-
-            var discounts = _discountService.GetDiscounts(basket);
+                new(new Product(sku, unitPrice), qty)
+            };
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
             
             Assert.AreEqual(1, discounts.Count);
 
             var firstDiscount = discounts.FirstOrDefault();
             
             Assert.AreEqual(-unitPrice * qty, firstDiscount?.UnitPrice);
+        }
+
+        [Test]
+        public void When_ProductDiscountExists_Then_SkuIsExtended()
+        {
+            _discounts = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "A",
+                    TriggerQuantity = 3,
+                    DiscountValue = -20
+                }
+            };
+
+            var basketContents = new List<BasketItem>
+            {
+                new(new Product("A", 50), 3)
+            };
+
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+            
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
+            
+            Assert.AreEqual(1, discounts.Count);
+
+            var firstDiscount = discounts.FirstOrDefault();
+            
+            Assert.NotNull(firstDiscount);
+
+            var firstBasketItem = basketContents.FirstOrDefault();
+            
+            Assert.NotNull(firstBasketItem);
+            
+            Assert.AreNotEqual(firstBasketItem.Product.Sku, firstDiscount.Sku);
+            
+        }
+
+        [Test]
+        public void When_TriggerThresholdIsNotReached_ThenDiscountDoesNotApply()
+        {
+            _discounts = new List<Discount>
+            {
+                new()
+                {
+                    Sku = "A",
+                    TriggerQuantity = 3,
+                    DiscountValue = -20
+                }
+            };
+            
+            var basketContents = new List<BasketItem>
+            {
+                new(new Product("A", 50), 2)
+            };
+            
+            _basketMock.Setup(x => x.GetContents())
+                .Returns(basketContents);
+
+            var discounts = _discountService.GetDiscounts(_basketMock.Object);
+            
+            Assert.AreEqual(0, discounts.Count);
+        }
+
+        [Test]
+        public void When_DiscountRepositoryIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new DiscountService(null);
+            });
         }
     }
 }

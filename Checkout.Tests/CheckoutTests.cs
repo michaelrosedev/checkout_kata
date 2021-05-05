@@ -1,5 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Checkout.Exceptions;
+using Checkout.Interfaces;
+using Checkout.Models;
+using Checkout.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -9,38 +14,34 @@ namespace Checkout.Tests
     {
         private Checkout _checkout;
         private Mock<IDiscountService> _discountServiceMock;
+        private Mock<IProductCatalog> _productCatalogMock;
         private List<Product> _products;
+        private List<IProduct> _discounts;
         
         [SetUp]
         public void Setup()
         {
             _products = new List<Product>
             {
-                new()
-                {
-                    Sku = "A",
-                    UnitPrice = 50
-                },
-                new()
-                {
-                    Sku = "B",
-                    UnitPrice = 30
-                },
-                new()
-                {
-                    Sku = "C",
-                    UnitPrice = 20
-                },
-                new()
-                {
-                    Sku = "D",
-                    UnitPrice = 15
-                }
+                new ("A", 50),
+                new("B", 30),
+                new("C", 20),
+                new("D", 15),
             };
+            
+            _discounts = new List<IProduct>(0);
+            
+            _productCatalogMock = new Mock<IProductCatalog>();
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns<string>(sku => _products.FirstOrDefault(p => p.Sku == sku));
+            
             _discountServiceMock = new Mock<IDiscountService>();
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
-                .Returns(new List<Product>(0));
-            _checkout = new Checkout(_products, _discountServiceMock.Object);
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
+                .Returns(_discounts);
+
+            var basket = new Basket();
+            
+            _checkout = new Checkout(_productCatalogMock.Object, _discountServiceMock.Object, basket, new NullCarrierBagProvider());
         }
 
         [Test]
@@ -145,14 +146,10 @@ namespace Checkout.Tests
             int qty,
             int expectedPrice)
         {
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
-                .Returns(new List<Product>
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
+                .Returns(new List<IProduct>
                 {
-                    new()
-                    {
-                        Sku = sku,
-                        UnitPrice = -20
-                    }
+                    new DiscountedProduct(sku, -20)
                 });
             
             for (var i = 0; i < qty; i++)
@@ -172,21 +169,13 @@ namespace Checkout.Tests
             const int discount = -20;
             const int expectedTotal = 260;
 
-            var actualDiscounts = new List<Product>
+            var actualDiscounts = new List<IProduct>
             {
-                new()
-                {
-                    Sku = sku,
-                    UnitPrice = discount
-                },
-                new()
-                {
-                    Sku = sku,
-                    UnitPrice = discount
-                }
+                new DiscountedProduct(sku, discount),
+                new DiscountedProduct(sku, discount)
             };
 
-            _discountServiceMock.Setup(d => d.GetDiscounts(It.IsAny<List<Product>>()))
+            _discountServiceMock.Setup(d => d.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(actualDiscounts);
 
             for (var i = 0; i < 6; i++)
@@ -211,40 +200,25 @@ namespace Checkout.Tests
             int secondUnitPrice,
             int secondQty)
         {
-            var expectedDiscounts = new List<Product>
+            _discounts = new List<IProduct>
             {
-                new()
-                {
-                    Sku = firstSku,
-                    UnitPrice = firstDiscount
-                },
-                new()
-                {
-                    Sku = secondSku,
-                    UnitPrice = secondDiscount
-                }
+                new DiscountedProduct(firstSku, firstDiscount),
+                new DiscountedProduct(secondSku, secondDiscount)
             };
             
-            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<List<Product>>()))
-                .Returns(expectedDiscounts);
-
-            var products = new List<Product>
+            _products = new List<Product>
             {
-                new()
-                {
-                    Sku = firstSku,
-                    UnitPrice = firstUnitPrice
-                },
-                new()
-                {
-                    Sku = secondSku,
-                    UnitPrice = secondUnitPrice
-                },
+                new(firstSku, firstUnitPrice),
+                new(secondSku, secondUnitPrice)
             };
 
+            _discountServiceMock.Setup(ds => ds.GetDiscounts(It.IsAny<Basket>()))
+                .Returns(_discounts);
+
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns<string>(sku => _products.FirstOrDefault(p => p.Sku == sku));
+            
             var expectedPrice = (firstQty * firstUnitPrice) + (secondQty * secondUnitPrice) + firstDiscount + secondDiscount;
-            
-            _checkout = new Checkout(products, _discountServiceMock.Object);
 
             for (var i = 0; i < firstQty; i++)
             {
@@ -259,7 +233,109 @@ namespace Checkout.Tests
             var total = _checkout.CalculatePrice();
             
             Assert.AreEqual(expectedPrice, total);
+        }
 
+        [Test]
+        public void When_ScanningSku_And_SkuIsNull_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _checkout.Scan(null);
+            });
+        }
+
+        [Test]
+        public void When_ScanningSku_And_SkuIsEmpty_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _checkout.Scan(string.Empty);
+            });
+        }
+
+        [TestCase("A", 10, 10, 10, 2, 110)]
+        [TestCase("A", 12, 5, 5, 1, 65)]
+        public void When_CarrierChargesApply_Then_ChargesAreIncludedInTheTotal(
+            string sku,
+            int unitPrice,
+            int qty,
+            int totalBagPrice,
+            int bagQty,
+            int expectedTotal)
+        {
+            var carrierBagProviderMock = new Mock<ICarrierBagProvider>();
+            carrierBagProviderMock.Setup(c => c.CalculateCarrierBags(It.IsAny<IBasket>()))
+                .Returns(new CarrierBagDetails(qty, totalBagPrice));
+
+            _productCatalogMock.Setup(pc => pc.GetProduct(It.IsAny<string>()))
+                .Returns(new Product(sku, unitPrice));
+            
+            _checkout = new Checkout(
+                _productCatalogMock.Object,
+                _discountServiceMock.Object,
+                new Basket(),
+                carrierBagProviderMock.Object);
+
+            for (var i = 0; i < qty; i++)
+            {
+                _checkout.Scan(sku);    
+            }
+            
+            var totalPrice = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedTotal, totalPrice);
+        }
+
+        [Test]
+        public void When_ProductCatalogIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    null,
+                    _discountServiceMock.Object,
+                    new Basket(),
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_DiscountServiceIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    null,
+                    new Basket(),
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_BasketIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    _discountServiceMock.Object,
+                    null,
+                    new NullCarrierBagProvider());
+            });
+        }
+
+        [Test]
+        public void When_CarrierBagProviderIsNotProvided_Then_AnExceptionIsThrown()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _ = new Checkout(
+                    _productCatalogMock.Object,
+                    _discountServiceMock.Object,
+                    new Basket(),
+                    null);
+            });
         }
     }
 }

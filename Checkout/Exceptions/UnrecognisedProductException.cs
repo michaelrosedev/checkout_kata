@@ -1,4 +1,5 @@
 ﻿using System;
+using Checkout.Models;
 
 namespace Checkout.Exceptions
 {

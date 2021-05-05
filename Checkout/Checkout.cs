@@ -1,27 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using Checkout.Exceptions;
+using Checkout.Interfaces;
+using Checkout.Models;
 
 namespace Checkout
 {
+    /// <inheritdoc />
     public class Checkout : ICheckout
     {
-        private readonly IEnumerable<Product> _products;
+        private readonly IProductCatalog _productCatalog;
         private readonly IDiscountService _discountService;
-        private readonly List<Product> _basket;
+        private readonly IBasket _basket;
+        private readonly ICarrierBagProvider _carrierBagProvider;
         
         /// <summary>
         /// Initialize a new instance of <see cref="Checkout"/>
         /// </summary>
-        /// <param name="products">The current list of available products</param>
+        /// <param name="productCatalog">The current product catalog</param>
         /// <param name="discountService">A service for processing discounts, if available</param>
+        /// <param name="basket">The basket for adding items to</param>
+        /// <param name="carrierBagProvider">A service for determining if carrier bags apply</param>
         public Checkout(
-            IEnumerable<Product> products,
-            IDiscountService discountService)
+            IProductCatalog productCatalog,
+            IDiscountService discountService,
+            IBasket basket,
+            ICarrierBagProvider carrierBagProvider)
         {
-            _products = products;
-            _discountService = discountService;
-            _basket = new List<Product>();
+            _productCatalog = productCatalog ?? throw new ArgumentNullException(nameof(productCatalog));
+            _discountService = discountService ?? throw new ArgumentNullException(nameof(discountService));
+            _basket = basket ?? throw new ArgumentNullException(nameof(basket));
+            _carrierBagProvider = carrierBagProvider ?? throw new ArgumentNullException(nameof(carrierBagProvider));
         }
 
         /// <summary>
@@ -33,13 +42,18 @@ namespace Checkout
         /// </exception>
         public void Scan(string sku)
         {
-            var product = _products.FirstOrDefault(p => p.Sku == sku);
+            if (string.IsNullOrWhiteSpace(sku))
+            {
+                throw new ArgumentNullException(nameof(sku));
+            }
+            
+            var product = _productCatalog.GetProduct(sku);
             if (product == null)
             {
                 throw new UnrecognisedProductException();
             }
             
-            _basket.Add(product);
+            _basket.AddProduct(product);
         }
 
         /// <summary>
@@ -48,30 +62,42 @@ namespace Checkout
         /// <returns><see cref="int"/></returns>
         public int CalculatePrice()
         {
-            if (_basket.Count == 0)
+            if (_basket.TotalItemQuantity() == 0)
             {
                 return 0;
             }
             
+            AddCarrierBags();
             ApplyDiscounts();
-            
-            var runningTotal = 0;
 
-            foreach (var scan in _basket)
-            {
-                runningTotal += scan.UnitPrice;
-            }
-
-            return runningTotal;
+            return _basket.TotalValue();
         }
 
         private void ApplyDiscounts()
         {
             var discounts = _discountService.GetDiscounts(_basket);
-            if (discounts.Any())
+            
+            if (!discounts.Any())
             {
-                _basket.AddRange(discounts);
+                return;
             }
+            
+            foreach (var discount in discounts)
+            {
+                _basket.AddProduct(discount);
+            }
+        }
+
+        private void AddCarrierBags()
+        {
+            var carrierBagDetails = _carrierBagProvider.CalculateCarrierBags(_basket);
+            if (carrierBagDetails == null || carrierBagDetails.Qty == 0)
+            {
+                return;
+            }
+
+            var product = new Product($"carriers_x_{carrierBagDetails.Qty}", carrierBagDetails.TotalPrice);
+            _basket.AddProduct(product);
         }
     }
 }
