@@ -169,21 +169,13 @@ namespace Checkout.Tests
             const int discount = -20;
             const int expectedTotal = 260;
 
-            var actualDiscounts = new List<Product>
+            var actualDiscounts = new List<IProduct>
             {
-                new()
-                {
-                    Sku = sku,
-                    UnitPrice = discount
-                },
-                new()
-                {
-                    Sku = sku,
-                    UnitPrice = discount
-                }
+                new DiscountedProduct(sku, discount),
+                new DiscountedProduct(sku, discount)
             };
 
-            _discountServiceMock.Setup(d => d.GetDiscounts(It.IsAny<List<Product>>()))
+            _discountServiceMock.Setup(d => d.GetDiscounts(It.IsAny<Basket>()))
                 .Returns(actualDiscounts);
 
             for (var i = 0; i < 6; i++)
