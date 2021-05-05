@@ -162,6 +162,41 @@ namespace Checkout.Tests
             Assert.AreEqual(expectedPrice, total);
         }
 
+        [Test]
+        public void When_MultipleDiscountsApplyForTheSameProduct_Then_TotalIsCorrect()
+        {
+            const string sku = "A";
+            const int discount = -20;
+            const int expectedTotal = 260;
+
+            var actualDiscounts = new List<Product>
+            {
+                new()
+                {
+                    Sku = sku,
+                    UnitPrice = discount
+                },
+                new()
+                {
+                    Sku = sku,
+                    UnitPrice = discount
+                }
+            };
+
+            _discountServiceMock.Setup(d => d.GetDiscounts(It.IsAny<List<Product>>()))
+                .Returns(actualDiscounts);
+
+            for (var i = 0; i < 6; i++)
+            {
+                _checkout.Scan(sku);        
+            }
+
+            var total = _checkout.CalculatePrice();
+            
+            Assert.AreEqual(expectedTotal, total);
+            
+        }
+        
         [TestCase("A", -20, 50, 3, "B", -15, 30, 2)]
         public void When_MultipleDiscountsAreTriggered_Then_MultipleDiscountsAreIncludedInTheTotal(
             string firstSku,

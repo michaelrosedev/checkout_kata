@@ -6,4 +6,5 @@ riderModule.iml
 .idea
 .vscode
 *.user
+.vscode
 TestResults/
